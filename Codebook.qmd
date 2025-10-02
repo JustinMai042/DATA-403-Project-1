@@ -1,9 +1,25 @@
 ---
 title: "Codebook"
 format: html
-editor: visual
 ---
 
-## Load Data and Libraries
+## Libraries
+```{r}
+library(tidyverse)
+library(readxl)
+```
 
-Initial commit
+## Load Data
+```{r}
+iowa_24_25 <- read_csv(here::here("Data", "Iowa_Liquor_Sales_2024_2025.csv"))
+iowa_pop <- read_excel(here::here("Data", "Iowa_City_Populations.xlsx"),
+                       skip = 3)
+```
+
+## Clean Data
+```{r}
+iowa_pop <- iowa_pop |>
+  mutate(City = str_extract(`...1`, "^[^,]+")) |>
+  select(City, `2020`, `2021`, `2022`, `2023`, `2024`)
+```
+
