@@ -5,6 +5,8 @@ format: html
 
 ## Introduction
 
+Thank you for choosing us to perform this analysis. Provided below is detailed information about the data we will be using, the model selection process, and the conclusions we aim to provide. We look forward to working with you.
+
 ## Data
 
 For the model, we will be using the alcohol sale transactions from the [Iowa Liquor Sales](https://data.iowa.gov/Sales-Distribution/Iowa-Liquor-Sales/m3tr-qhgy/about_data) dataset. The orignal dataset spans from 2012 to 2025. However, we will be using the data from September 1st, 2020 to August 31st, 2025 as we believe this more recent, post-covid data is more relevant to your goals. We also excluded unincorporated areas as they represent a minute chunk of the data (\~0.5%) and we believe they don't have enough additional data to result in accurate predictions. In addition to alcohol sales, we will be using Iowa population count from the [Iowa Incorporated Places: 2020 to 2024](https://www.census.gov/data/tables/time-series/demo/popest/2020s-total-cities-and-towns.html) dataset. This dataset spans from July 1st 2020 to July 1st 2024.
