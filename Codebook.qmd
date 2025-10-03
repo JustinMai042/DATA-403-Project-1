@@ -34,7 +34,7 @@ iowa_24_25 <- iowa_24_25 |>
                              Date < mdy("9/1/2024") ~ 2023,
                              TRUE ~ 2024),
          Year = year(Date),
-         Date = month(Date, label = TRUE, abbr = FALSE),
+         Date = month(Date, label = TRUE, abbr = TRUE),
          across(City:`Category Name`, str_to_title)) |>
   rename(Month = Date,
          Category = `Category Name`,
@@ -81,11 +81,11 @@ df_iowa <- iowa_pop |>
            City == "Oskaloosa" ~ "William Penn University",
            City == "Forest City" ~ "Waldorf University",
            TRUE ~ NA_character_),
-         TF_College = !is.na(College)) |>
-  select(City, `2020`, `2021`, `2022`, `2023`, `2024`, College, TF_College)
+         CollegeTF = !is.na(College)) |>
+  select(City, `2020`, `2021`, `2022`, `2023`, `2024`, College, CollegeTF)
 
 df_iowa <- df_iowa |>
-  pivot_longer(cols = -c(City, College, TF_College),
+  pivot_longer(cols = -c(City, College, CollegeTF),
     names_to = "PopYear",
     values_to = "Population"
   ) |>
@@ -110,7 +110,7 @@ df_iowa <- df_iowa |>
 
 ```{r}
 df_A <- df_iowa |>
-  group_by(City, TF_College, Population, Category, Year, Month) |>
+  group_by(City, CollegeTF, Population, Category, Year, Month) |>
   summarize(TotalSales = sum(Sales)) |>
   mutate(AvgSales = TotalSales/Population) |>
   select(-TotalSales)
@@ -120,8 +120,42 @@ df_A <- df_iowa |>
 
 ```{r}
 df_B <- df_iowa |>
-  group_by(City, TF_College, Population, Category) |>
+  group_by(City, CollegeTF, Population, Category) |>
   summarize(TotalLiters = sum(LitersSold)) |>
   mutate(AvgLiters = TotalLiters/Population) |>
   select(-TotalLiters)
+```
+
+## Data Visualizations
+
+#### Client A: Booze ‘R’ Us
+
+```{r}
+df_A |>
+  mutate(Month = factor(if_else(Month == "Sep", "Sep, 2024",
+                                if_else(Month == "Jan", "Jan, 2025", Month)),
+                        levels = c("Sep, 2024", "Oct", "Nov", "Dec", "Jan, 2025",
+                                   "Feb", "Mar", "Apr", "May", "Jun", "Jul",
+                                   "Aug")),
+         #Month = month(mdy(paste(Month, "1, 2000"))),
+         CollegeTF = factor(if_else(CollegeTF, "Yes", "No"),
+                            levels = c("Yes", "No"))) |>
+  group_by(CollegeTF, Month) |>
+  summarize(AvgSales = mean(AvgSales), .groups = "drop") |>
+  ggplot(aes(x = Month, y = AvgSales, color = CollegeTF, group = CollegeTF)) +
+  geom_line() +
+  #scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12),
+                     #labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                                #"Jul", "Aug", "Sep", "Oct", "Nov", "Dec")) +
+  scale_color_manual(values = c("steelblue", "orange3")) +
+  labs(x = "Month", y = "Average Sales per Capita ($)",
+       color = "College Town?", title = "Iowa Alcohol Sales Per Capita") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+#### Client B: Drinking Excess Alcohol is Dangerous (DEAD)
+
+```{r}
+
 ```
