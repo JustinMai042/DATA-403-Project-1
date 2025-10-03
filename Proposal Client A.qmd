@@ -13,6 +13,8 @@ For the model, we will be using the alcohol sale transactions from the [Iowa Liq
 
 Based on the existing the data, we created new variables to aid in the analysis. Using sale price and population, we calculated the sales per person. We also created a binary college town variable that is true if the city contains a college and false otherwise.
 
+To better understand the data, we performed some initial exploratory analysis. From our exploration, we found that college towns in Iowa tend to sell more alcohol per person than non college towns. Alcohol sales also vary by time of the year. More alcohol tends to be sold during the latter half of the year than the beginning of the year.
+
 ## Model Selection
 
 Using the data above, we will be creating a linear regression model to predict the alcohol sales per person of a city. Our model will use city demographics, college town information, and alcohol sales to make its predictions. We won't be including data specific to Iowan cities as we want our predictors to translate effectively to other states you are interested in expanding to.
