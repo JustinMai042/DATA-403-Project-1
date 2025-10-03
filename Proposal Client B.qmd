@@ -1,0 +1,13 @@
+---
+title: "Client A Project Proposal"
+format: html
+editor: visual
+---
+
+## Introduction
+
+Data
+
+Model Selection
+
+For client A we chose to create a linear regression model that will predict the alcohol sales per person of a city. Our model will use city demographics, college town information, and alcohol sales to make its predictions. factors such as population and whether or not the the city is a college town. Since our client is looking to expand their stores into other states, our model will not contain any Iowa specific predictors such as the county name. price per person of alcohol sale
