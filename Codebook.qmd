@@ -33,7 +33,7 @@ iowa_24_25 <- iowa_24_25 |>
                              Date < mdy("9/1/2023") ~ 2022,
                              Date < mdy("9/1/2024") ~ 2023,
                              TRUE ~ 2024),
-         #Year = year(mdy(Date)),
+         Year = year(Date),
          Date = month(Date, label = TRUE, abbr = FALSE),
          across(City:`Category Name`, str_to_title)) |>
   rename(Month = Date,
@@ -110,15 +110,18 @@ df_iowa <- df_iowa |>
 
 ```{r}
 df_A <- df_iowa |>
-  group_by(City, TF_College, Population, Category) |>
+  group_by(City, TF_College, Population, Category, Year, Month) |>
   summarize(TotalSales = sum(Sales)) |>
-  mutate(AvgSales = TotalSales/Population)
+  mutate(AvgSales = TotalSales/Population) |>
+  select(-TotalSales)
 ```
 
 #### Client B: Drinking Excess Alcohol is Dangerous (DEAD)
 
 ```{r}
 df_B <- df_iowa |>
-  group_by() |>
-  summarize()
+  group_by(City, TF_College, Population, Category) |>
+  summarize(TotalLiters = sum(LitersSold)) |>
+  mutate(AvgLiters = TotalLiters/Population) |>
+  select(-TotalLiters)
 ```
