@@ -27,8 +27,14 @@ iowa_24_25 <- iowa_24_25 |>
             `Vendor Number`, `Vendor Name`, `Item Number`, `Item Description`,
             Pack, `Bottle Volume (ml)`, `State Bottle Cost`,
             `State Bottle Retail`, `Bottles Sold`, `Volume Sold (Gallons)`)) |>
-  mutate(Year = year(mdy(Date)),
-         Date = month(mdy(Date), label = TRUE, abbr = FALSE),
+  mutate(Date = mdy(Date),
+         PopYear = case_when(Date < mdy("9/1/2021") ~ 2020,
+                             Date < mdy("9/1/2022") ~ 2021,
+                             Date < mdy("9/1/2023") ~ 2022,
+                             Date < mdy("9/1/2024") ~ 2023,
+                             TRUE ~ 2024),
+         #Year = year(mdy(Date)),
+         Date = month(Date, label = TRUE, abbr = FALSE),
          across(City:`Category Name`, str_to_title)) |>
   rename(Month = Date,
          Category = `Category Name`,
@@ -80,9 +86,11 @@ df_iowa <- iowa_pop |>
 
 df_iowa <- df_iowa |>
   pivot_longer(cols = -c(City, College, TF_College),
-    names_to = "Year",
+    names_to = "PopYear",
     values_to = "Population"
   ) |>
-  mutate(Year = as.numeric(Year)) |>
-  right_join(iowa_24_25, by = c("City", "Year"))
+  mutate(PopYear = as.numeric(PopYear)) |>
+  right_join(iowa_24_25, by = c("City", "PopYear")) |>
+  filter(Sales > 0,
+         LitersSold > 0)
 ```
