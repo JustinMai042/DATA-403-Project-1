@@ -18,7 +18,7 @@ iowa_pop <- read_excel(here::here("Data", "Iowa_City_Populations.xlsx"),
                        skip = 3)
 ```
 
-## Clean Data
+## Data Cleaning and Feature Engineering
 
 ```{r}
 iowa_24_25 <- iowa_24_25 |>
@@ -90,7 +90,35 @@ df_iowa <- df_iowa |>
     values_to = "Population"
   ) |>
   mutate(PopYear = as.numeric(PopYear)) |>
-  right_join(iowa_24_25, by = c("City", "PopYear")) |>
+  inner_join(iowa_24_25, by = c("City", "PopYear")) |>
   filter(Sales > 0,
-         LitersSold > 0)
+         LitersSold > 0) |>
+  mutate(Category = case_when(
+      str_detect(Category, regex("Whisk", ignore_case = TRUE)) ~ "Whisky",
+      str_detect(Category, regex("Vodka", ignore_case = TRUE)) ~ "Vodka",
+      str_detect(Category, regex("Rum", ignore_case = TRUE)) ~ "Rum",
+      str_detect(Category, regex("Gin", ignore_case = TRUE)) ~ "Gin",
+      str_detect(Category, regex("Tequila|Mezcal", ignore_case = TRUE)) ~ "Tequila/Mezcal",
+      str_detect(Category, regex("Brandi", ignore_case = TRUE)) ~ "Brandy",
+      str_detect(Category, regex("Cordials|Liqueur|Schnapps|Triple Sec|Cream Liqueur|Coffee Liqueur", ignore_case = TRUE)) ~ "Cordials & Liqueur",
+      str_detect(Category, regex("Cocktails|Rtd", ignore_case = TRUE)) ~ "Ready to Drink",
+      str_detect(Category, regex("Neutral Grain Spirits", ignore_case = TRUE)) ~ "Neutral Grain Spirit",
+      TRUE ~ "Other"))
+```
+
+#### Client A: Booze ‘R’ Us
+
+```{r}
+df_A <- df_iowa |>
+  group_by(City, TF_College, Population, Category) |>
+  summarize(TotalSales = sum(Sales)) |>
+  mutate(AvgSales = TotalSales/Population)
+```
+
+#### Client B: Drinking Excess Alcohol is Dangerous (DEAD)
+
+```{r}
+df_B <- df_iowa |>
+  group_by() |>
+  summarize()
 ```
