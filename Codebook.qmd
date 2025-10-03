@@ -18,8 +18,69 @@ iowa_pop <- read_excel(here::here("Data", "Iowa_City_Populations.xlsx"),
 
 ## Clean Data
 ```{r}
-iowa_pop <- iowa_pop |>
-  mutate(City = str_extract(`...1`, "^[^,]+")) |>
-  select(City, `2020`, `2021`, `2022`, `2023`, `2024`)
+iowa_24_25 <- iowa_24_25 |>
+  select(-c(`Invoice/Item Number`, `Store Number`, `Store Name`, `Address`,
+            `Zip Code`, `Store Location`, `County Number`, Category,
+            `Vendor Number`, `Vendor Name`, `Item Number`, `Item Description`,
+            Pack, `Bottle Volume (ml)`, `State Bottle Cost`,
+            `State Bottle Retail`, `Bottles Sold`, `Volume Sold (Gallons)`)) |>
+  mutate(Year = year(mdy(Date)),
+         Date = month(mdy(Date), label = TRUE, abbr = FALSE),
+         across(City:`Category Name`, str_to_title)) |>
+  rename(Month = Date,
+         Category = `Category Name`,
+         Sales = `Sale (Dollars)`,
+         LitersSold = `Volume Sold (Liters)`)
+
+df_iowa <- iowa_pop |>
+  mutate(City = str_to_title(str_remove(`...1`, " city, Iowa$")),
+         College = case_when(
+           City == "Iowa City" ~ "University of Iowa",
+           City == "Ames" ~ "Iowa State University",
+           City == "Cedar Falls" ~ "University of Northern Iowa",
+           City == "Ankeny" ~ "Des Moines Area Community College",
+           City == "Davenport" ~ "Eastern Iowa Community Colleges; Palmer College of Chiropractic; St. Ambrose University",
+           City == "Iowa Falls" ~ "Ellsworth Community College",
+           City == "Waterloo" ~ "Hawkeye Community College; Allen College",
+           City == "Ottumwa" ~ "Indian Hills Community College",
+           City == "Fort Dodge" ~ "Iowa Central Community College",
+           City == "Estherville" ~ "Iowa Lakes Community College",
+           City == "Council Bluffs" ~ "Iowa Western Community College",
+           City == "Cedar Rapids" ~ "Kirkwood Community College; Coe College; Mount Mercy University",
+           City == "Marshalltown" ~ "Marshalltown Community College",
+           City == "Mason City" ~ "North Iowa Area Community College",
+           City == "Calmar" ~ "Northeast Iowa Community College",
+           City == "Sheldon" ~ "Northwest Iowa Community College",
+           City == "West Burlington" ~ "Southeastern Community College",
+           City == "Creston" ~ "Southwestern Community College",
+           City == "Sioux City" ~ "Western Iowa Tech Community College; Briar Cliff University; Morningside University; St. Luke's College",
+           City == "Sioux Center" ~ "Dordt University",
+           City == "Storm Lake" ~ "Buena Vista University",
+           City == "Pella" ~ "Central College",
+           City == "Dubuque" ~ "Clarke University; Emmaus University; Loras College; University of Dubuque; Wartburg Theological Seminary",
+           City == "Epworth" ~ "Divine Word College",
+           City == "Des Moines" ~ "Drake University; Des Moines University; Mercy College of Health Sciences; Grand View University",
+           City == "Mount Vernon" ~ "Cornell College",
+           City == "Lamoni" ~ "Graceland University",
+           City == "Grinnell" ~ "Grinnell College",
+           City == "Decorah" ~ "Luther College",
+           City == "Fairfield" ~ "Maharishi International University",
+           City == "Indianola" ~ "Simpson College",
+           City == "Orange City" ~ "Northwestern College",
+           City == "Fayette" ~ "Upper Iowa University",
+           City == "Waverly" ~ "Wartburg College",
+           City == "Oskaloosa" ~ "William Penn University",
+           City == "Forest City" ~ "Waldorf University",
+           TRUE ~ NA_character_),
+         TF_College = !is.na(College)) |>
+  select(City, `2020`, `2021`, `2022`, `2023`, `2024`, College, TF_College)
+
+df_iowa <- df_iowa |>
+  pivot_longer(cols = -c(City, College, TF_College),
+    names_to = "Year",
+    values_to = "Population"
+  ) |>
+  mutate(Year = as.numeric(Year)) |>
+  right_join(iowa_24_25, by = c("City", "Year"))
 ```
 
