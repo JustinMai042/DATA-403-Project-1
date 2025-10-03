@@ -13,7 +13,7 @@ For the model, we will be using the alcohol sale transactions from the [Iowa Liq
 
 Based on the existing the data, we created new variables to aid in the analysis. Using sale price and population, we calculated the sales per person. We also created a binary college town variable that is true if the city contains a college and false otherwise.
 
-To better understand the data, we performed some initial exploratory analysis. From our exploration, we found that college towns in Iowa tend to sell more alcohol per person than non college towns. Alcohol sales also vary by time of the year. More alcohol tends to be sold during the latter half of the year than the beginning of the year.
+To better understand the data, we performed some initial exploratory analysis on data from September 2024 to September 2025. From our exploration, we found that college towns in Iowa tend to sell more alcohol per person than non college towns. Alcohol sales also vary by time of the year. More alcohol tends to be sold during the latter half of the year than the beginning of the year.
 
 ![Fig. 1: Graph showing average alcohol sales per capita by college presence over time](Graphs/client_a_graph_1.png)
 
