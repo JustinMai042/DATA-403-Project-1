@@ -14,6 +14,8 @@ For the model, we will be using the alcohol sales transactions form the [Iowa Li
 
 Using this data, we also created new variables for the analysis. We brought in data about the location of universities and colleges in Iowa to create a binary college town variable that is true if the city contains a college and false otherwise. In addition, we divided the total liters sold by the population of that city to create a liters per person variable since we were interested in exploring the amount of alcohol sold per capita.
 
+![](Graphs/client_b_graph_1.png)
+
 ## Model Selection
 
 To meet the goals of your organization, Drinking Excess Alcohol is Dangerous, we chose to create a linear regression model that will predict the alcohol sales in volume per person in a city. The model will use city demographics, college town information, and alcohol sales to make its predictions. Since you are looking to understand what factors drive higher or lower alcohol purchases to make alcohol culture safer in Iowa, the model will also contain Iowa specific predictors such as the county name. Our goal with the model is to discover which factors are the best predictors of high drinking rates, which allow your organization to have more targeted campaigning in those areas. To achieve this, we will be testing multiple models with various predictors using cross validation and the appropriate scoring metric.
