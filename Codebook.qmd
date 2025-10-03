@@ -13,6 +13,7 @@ library(readxl)
 ## Load Data
 
 ```{r}
+
 iowa_24_25 <- read_csv(here::here("Data", "Iowa_Liquor_Sales_2024_2025.csv"))
 iowa_pop <- read_excel(here::here("Data", "Iowa_City_Populations.xlsx"),
                        skip = 3)
@@ -157,5 +158,34 @@ df_A |>
 #### Client B: Drinking Excess Alcohol is Dangerous (DEAD)
 
 ```{r}
+library(tidyverse)
+
+dataset_b <- df_iowa |>
+  group_by(City, CollegeTF, Population, Category) |>
+  summarise(LitersSold = sum(LitersSold), .groups = "drop") |>
+  mutate(AvgLiters = LitersSold / Population) |>
+  mutate(CollegeTF = if_else(CollegeTF, "College town", "Non-college"))
+
+weighted_by_cat <- dataset_b |>
+  group_by(Category, CollegeTF) |>
+  summarise(
+    weighted_mean = weighted.mean(AvgLiters, w = Population, na.rm = TRUE),
+    .groups = "drop"
+  ) |>
+  mutate(
+    CollegeTF = factor(CollegeTF, levels = c("College town", "Non-college"))
+  )
+
+ggplot(weighted_by_cat, aes(x = Category, y = weighted_mean, fill = CollegeTF)) +
+  geom_col(position = position_dodge(width = 0.7), width = 0.65) +
+  coord_flip() +
+  scale_fill_manual(
+    values = c("College town" = "steelblue", "Non-college" = "orange3"),
+    breaks = c("College town", "Non-college"),
+    labels = c("College town", "Non-college")
+  ) +
+  labs(x = NULL, y = "Population-weighted avg liters per person", fill = NULL) +
+  theme_minimal(base_size = 11) +
+  theme(panel.grid.minor = element_blank())
 
 ```
