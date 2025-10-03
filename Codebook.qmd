@@ -4,12 +4,14 @@ format: html
 ---
 
 ## Libraries
+
 ```{r}
 library(tidyverse)
 library(readxl)
 ```
 
 ## Load Data
+
 ```{r}
 iowa_24_25 <- read_csv(here::here("Data", "Iowa_Liquor_Sales_2024_2025.csv"))
 iowa_pop <- read_excel(here::here("Data", "Iowa_City_Populations.xlsx"),
@@ -17,6 +19,7 @@ iowa_pop <- read_excel(here::here("Data", "Iowa_City_Populations.xlsx"),
 ```
 
 ## Clean Data
+
 ```{r}
 iowa_24_25 <- iowa_24_25 |>
   select(-c(`Invoice/Item Number`, `Store Number`, `Store Name`, `Address`,
@@ -83,4 +86,3 @@ df_iowa <- df_iowa |>
   mutate(Year = as.numeric(Year)) |>
   right_join(iowa_24_25, by = c("City", "Year"))
 ```
-
