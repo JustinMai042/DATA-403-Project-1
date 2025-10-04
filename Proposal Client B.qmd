@@ -1,7 +1,8 @@
 ---
-title: "Client B Project Proposal"
-format: html
-editor: visual
+title: "Drinking Excess Alcohol is Dangerous (DEAD) Project Proposal"
+subtitle: "DATA 403: Project 1"
+authors: "Justin Mai, Libby Brill, Maxwell Dubow, Rachel Hartfelder"
+format: pdf
 ---
 
 ## Introduction
@@ -16,7 +17,7 @@ Using this data, we also created new variables for the analysis. We brought in d
 
 To understand the nature of the data, we performed an initial exploratory analysis and found that for most types of alcohol, college students are the primary consumer purchasing more liters per person than non college cities. We also found that whisky and vodka alcohols are more popular than other types.
 
-![Fig 1: Graph comparing the liters of alcohol sold per person between types of alcohol and college town presence](Graphs/client_b_graph_1.png)
+![Graph comparing the liters of alcohol sold per person between types of alcohol and college town presence](Graphs/client_b_graph_1.png)
 
 ## Model Selection
 

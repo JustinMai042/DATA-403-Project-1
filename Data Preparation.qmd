@@ -1,11 +1,13 @@
 ---
-title: "Codebook"
-format: html
+title: "Data Preparation"
+subtitle: "DATA 403: Project 1"
+authors: "Justin Mai, Libby Brill, Maxwell Dubow, Rachel Hartfelder"
+format: pdf
 ---
 
-## Libraries
-
 ```{r}
+#| message: false
+
 library(tidyverse)
 library(readxl)
 ```
@@ -21,6 +23,7 @@ library(readxl)
     -   We used the last year for initial overview and to set up the process, and will be expanding to the last 5 years once our model setup is complete
 
 ```{r}
+#| message: false
 
 iowa_24_25 <- read_csv(here::here("Data", "Iowa_Liquor_Sales_2024_2025.csv"))
 iowa_pop <- read_excel(here::here("Data", "Iowa_City_Populations.xlsx"),
@@ -77,27 +80,34 @@ df_iowa <- iowa_pop |>
            City == "Ames" ~ "Iowa State University",
            City == "Cedar Falls" ~ "University of Northern Iowa",
            City == "Ankeny" ~ "Des Moines Area Community College",
-           City == "Davenport" ~ "Eastern Iowa Community Colleges; Palmer College of Chiropractic; St. Ambrose University",
+           City == "Davenport" ~ "Eastern Iowa Community Colleges;
+           Palmer College of Chiropractic; St. Ambrose University",
            City == "Iowa Falls" ~ "Ellsworth Community College",
            City == "Waterloo" ~ "Hawkeye Community College; Allen College",
            City == "Ottumwa" ~ "Indian Hills Community College",
            City == "Fort Dodge" ~ "Iowa Central Community College",
            City == "Estherville" ~ "Iowa Lakes Community College",
            City == "Council Bluffs" ~ "Iowa Western Community College",
-           City == "Cedar Rapids" ~ "Kirkwood Community College; Coe College; Mount Mercy University",
+           City == "Cedar Rapids" ~ "Kirkwood Community College; Coe College;
+           Mount Mercy University",
            City == "Marshalltown" ~ "Marshalltown Community College",
            City == "Mason City" ~ "North Iowa Area Community College",
            City == "Calmar" ~ "Northeast Iowa Community College",
            City == "Sheldon" ~ "Northwest Iowa Community College",
            City == "West Burlington" ~ "Southeastern Community College",
            City == "Creston" ~ "Southwestern Community College",
-           City == "Sioux City" ~ "Western Iowa Tech Community College; Briar Cliff University; Morningside University; St. Luke's College",
+           City == "Sioux City" ~ "Western Iowa Tech Community College;
+           Briar Cliff University; Morningside University;
+           St. Luke's College",
            City == "Sioux Center" ~ "Dordt University",
            City == "Storm Lake" ~ "Buena Vista University",
            City == "Pella" ~ "Central College",
-           City == "Dubuque" ~ "Clarke University; Emmaus University; Loras College; University of Dubuque; Wartburg Theological Seminary",
+           City == "Dubuque" ~ "Clarke University; Emmaus University;
+           Loras College; University of Dubuque;
+           Wartburg Theological Seminary",
            City == "Epworth" ~ "Divine Word College",
-           City == "Des Moines" ~ "Drake University; Des Moines University; Mercy College of Health Sciences; Grand View University",
+           City == "Des Moines" ~ "Drake University; Des Moines University;
+           Mercy College of Health Sciences; Grand View University",
            City == "Mount Vernon" ~ "Cornell College",
            City == "Lamoni" ~ "Graceland University",
            City == "Grinnell" ~ "Grinnell College",
@@ -127,11 +137,16 @@ df_iowa <- df_iowa |>
       str_detect(Category, regex("Vodka", ignore_case = TRUE)) ~ "Vodka",
       str_detect(Category, regex("Rum", ignore_case = TRUE)) ~ "Rum",
       str_detect(Category, regex("Gin", ignore_case = TRUE)) ~ "Gin",
-      str_detect(Category, regex("Tequila|Mezcal", ignore_case = TRUE)) ~ "Tequila/Mezcal",
+      str_detect(Category, regex("Tequila|Mezcal", ignore_case = TRUE))
+      ~ "Tequila/Mezcal",
       str_detect(Category, regex("Brandi", ignore_case = TRUE)) ~ "Brandy",
-      str_detect(Category, regex("Cordials|Liqueur|Schnapps|Triple Sec|Cream Liqueur|Coffee Liqueur", ignore_case = TRUE)) ~ "Cordials & Liqueur",
-      str_detect(Category, regex("Cocktails|Rtd", ignore_case = TRUE)) ~ "Ready to Drink",
-      str_detect(Category, regex("Neutral Grain Spirits", ignore_case = TRUE)) ~ "Neutral Grain Spirit",
+      str_detect(Category, regex("Cordials|Liqueur|Schnapps|Triple Sec|
+                                 Cream Liqueur|Coffee Liqueur",
+                                 ignore_case = TRUE)) ~ "Cordials & Liqueur",
+      str_detect(Category, regex("Cocktails|Rtd", ignore_case = TRUE))
+      ~ "Ready to Drink",
+      str_detect(Category, regex("Neutral Grain Spirits", ignore_case = TRUE))
+      ~ "Neutral Grain Spirit",
       TRUE ~ "Other"))
 ```
 
@@ -190,9 +205,9 @@ df_B <- df_iowa |>
 df_A |>
   mutate(Month = factor(if_else(Month == "Sep", "Sep, 2024",
                                 if_else(Month == "Jan", "Jan, 2025", Month)),
-                        levels = c("Sep, 2024", "Oct", "Nov", "Dec", "Jan, 2025",
-                                   "Feb", "Mar", "Apr", "May", "Jun", "Jul",
-                                   "Aug")),
+                        levels = c("Sep, 2024", "Oct", "Nov", "Dec",
+                                   "Jan, 2025", "Feb", "Mar", "Apr", "May",
+                                   "Jun", "Jul", "Aug")),
          CollegeTF = if_else(CollegeTF, "College Town",
                                     "Non-College Town")) |>
   group_by(CollegeTF, Month) |>
@@ -220,7 +235,8 @@ weighted_by_cat <- df_B |>
                        levels = c("Non-College Town", "College Town"))
   )
 
-ggplot(weighted_by_cat, aes(x = Category, y = weighted_mean, fill = CollegeTF)) +
+ggplot(weighted_by_cat, aes(x = Category, y = weighted_mean,
+                            fill = CollegeTF)) +
   geom_col(position = position_dodge(width = 0.7), width = 0.65) +
   coord_flip() +
   scale_fill_manual(
