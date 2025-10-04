@@ -5,13 +5,6 @@ authors: "Justin Mai, Libby Brill, Maxwell Dubow, Rachel Hartfelder"
 format: pdf
 ---
 
-```{r}
-#| message: false
-
-library(tidyverse)
-library(readxl)
-```
-
 ## Data Collection
 
 -   Added 2 sources of outside data
@@ -22,24 +15,14 @@ library(readxl)
 -   We chose to focus on the last 5 years as we wanted higher velocity data, for our predictive and interpretive models.
     -   We used the last year for initial overview and to set up the process, and will be expanding to the last 5 years once our model setup is complete
 
-```{r}
-#| message: false
-
-iowa_24_25 <- read_csv(here::here("Data", "Iowa_Liquor_Sales_2024_2025.csv"))
-iowa_pop <- read_excel(here::here("Data", "Iowa_City_Populations.xlsx"),
-                       skip = 3)
-```
-
-## Data Cleaning and Feature Engineering
-
-Data Cleaning
+## Data Cleaning
 
 -   Removing rows with negative “Bottles Sold”
 -   Removed Columns
     -   We removed `Invoice/Item Number`, `Store Number`, `Store Name`, `Address` `Zip Code`, `Store Location`, `County Number`, `Category`, `Vendor Number`, `Vendor Name`, `Item Number`, `Item Description`, `Pack`, `Bottle Volume (ml)`, `State Bottle Cost`, `State Bottle Retail`, `Bottles Sold`, `Volume Sold (Gallons)`
         -   Since we don't care about store location, what stores, store name, and by association zip code, along with that specific invoice along with county number so those were removed. We also choose to remove categories since we already have category names. Additionally, we also choose to remove the Item number as we have no reference to that value. Item description was removed as Category names exist. Pack, state bottle cost, state bottle retail, bottle volume, volume sold, and bottles sold as we have total sales for that specific item of alcohol and we kept volume sold (liters) as our metric of measurement.
 
-Feature Engineering
+## Feature Engineering
 
 -   Added Columns
     -   Added a column for colleges in Iowa corresponding to cities within Iowa.
@@ -51,6 +34,50 @@ Feature Engineering
     -   From the Date column added a column called Year.
     -   Transformed and renamed the Date column to Month.
     -    Renamed `Category Name` to `Category`, `Sale (Dollars)` to `Sales`, `Volume Sold (Liters)` to `LitersSold`
+
+## Data Transformation
+
+-   Pivoted data from wide to long (around 3 main columns: `City`, `College`, and `CollegeTF`).
+-   Left with one large dataset called `df_iowa` with columns:
+    -   `City`: City in Iowa
+    -   `College`: College(s) belonging to city in Iowa
+    -   `CollegeTF`: True if College in city, False otherwise.
+    -   `PopYear`: Year of population estimate by U.S. Census
+    -   `Population`: Population estimate for city of given year by U.S. Census 
+    -   `Month`: Month of year from original date column of Iowa Liquor Sales
+    -   `County`: County of city.
+    -   `Category`: One of 10 types of classification for Alcohol
+    -   `Sales`: 	Total cost of liquor order (number of bottles multiplied by the state bottle retail)
+    -   `LitersSold`: Total volume of liquor ordered in liters. (i.e. (Bottle Volume (ml) x Bottles Sold)/1,000)
+    -   `Year`: Year from original date column of Iowa Liquor Sales
+
+#### Client A: `df_A`
+
+-   Grouped by `City`, `CollegeTF`, `Population`, `Category`, `Year`, `Month`
+-   Produced `AvgSales` by summing the city sales and dividing by the city population, for average sales per person (i.e. .43: .43 bottles sold per person in that city for that month within that year)
+
+#### Client B: `df_B`
+
+-   Grouped by `City`, `CollegeTF`, `Population`, `Category`
+-   Produced `AvgLiters` by summing the city liters sold and dividing by the city population for average liters sold per person. (i.e. 1.6: 1.6 liters sold per person in that city for that month within that year)
+
+## Code
+
+```{r}
+#| echo: false
+#| message: false
+
+library(tidyverse)
+library(readxl)
+```
+
+```{r}
+#| message: false
+
+iowa_24_25 <- read_csv(here::here("Data", "Iowa_Liquor_Sales_2024_2025.csv"))
+iowa_pop <- read_excel(here::here("Data", "Iowa_City_Populations.xlsx"),
+                       skip = 3)
+```
 
 ```{r}
 iowa_24_25 <- iowa_24_25 |>
@@ -150,35 +177,6 @@ df_iowa <- df_iowa |>
       TRUE ~ "Other"))
 ```
 
-Data Transformation
-
--   Pivoted data from wide to long
-    -   Pivoted around 3 main columns: `City`, `College`, and `CollegeTF`.
--   Left with one large dataset called `df_iowa` with columns:
-    -   `City`: City in Iowa
-    -   `College`: College(s) belonging to city in Iowa
-    -   `CollegeTF`: True if College in city, False otherwise.
-    -   `PopYear`: Year of population estimate by U.S. Census
-    -   `Population`: Population estimate for city of given year by U.S. Census 
-    -   `Month`: Month of year from original date column of Iowa Liquor Sales
-    -   `County`: County of city.
-    -   `Category`: One of 10 types of classification for Alcohol
-    -   `Sales`: 	Total cost of liquor order (number of bottles multiplied by the state bottle retail)
-    -   `LitersSold`: Total volume of liquor ordered in liters. (i.e. (Bottle Volume (ml) x Bottles Sold)/1,000)
-    -   `Year`: Year from original date column of Iowa Liquor Sales
-
-Client A: `df_A`, Client B: `df_B`
-
--   `df_A`
-    -   Grouped by `City`, `CollegeTF`, `Population`, `Category`, `Year`, `Month`
-    -   Produced `AvgSales` by summing the city sales and dividing by the city population, for average sales per person (i.e. .43: .43 bottles sold per person in that city for that month within that year)
--   `df_B`
-    -   Grouped by `City`, `CollegeTF`, `Population`, `Category`
-    -   Produced `AvgLiters` by summing the city liters sold and dividing by the city population for average liters sold per person. (i.e. 1.6: 1.6 liters sold per person in that city for that month within that year)
-
-
-#### Client A: Booze ‘R’ Us
-
 ```{r}
 df_A <- df_iowa |>
   group_by(City, CollegeTF, Population, Category, Year, Month) |>
@@ -186,8 +184,6 @@ df_A <- df_iowa |>
   mutate(AvgSales = TotalSales/Population) |>
   select(-TotalSales)
 ```
-
-#### Client B: Drinking Excess Alcohol is Dangerous (DEAD)
 
 ```{r}
 df_B <- df_iowa |>
@@ -197,9 +193,7 @@ df_B <- df_iowa |>
   select(-TotalLiters)
 ```
 
-## Data Visualizations
-
-#### Client A: Booze ‘R’ Us
+#### Data Visualizations
 
 ```{r}
 df_A |>
@@ -220,8 +214,6 @@ df_A |>
   theme_bw() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
-
-#### Client B: Drinking Excess Alcohol is Dangerous (DEAD)
 
 ```{r}
 weighted_by_cat <- df_B |>
