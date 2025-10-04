@@ -1,5 +1,5 @@
 ---
-title: "Client A Project Proposal"
+title: "Booze ‘R’ Us Project Proposal"
 subtitle: "DATA 403: Project 1"
 authors: "Justin Mai, Libby Brill, Maxwell Dubow, Rachel Hartfelder"
 format: pdf
