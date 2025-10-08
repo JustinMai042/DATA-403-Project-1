@@ -1,0 +1,158 @@
+---
+title: "Cross Val"
+author: "Pintxos Gang"
+format: html
+---
+
+```{r}
+library(tidymodels)
+data(ames)
+head(ames)
+```
+
+```{r}
+linear_fit <- function(df){
+  Y <- as.matrix(df[,1, drop=FALSE])
+  X <- cbind(rep(1, nrow(df)), as.matrix(df[,-1]))
+  colnames(X)[1] <- "intercept"
+  
+  return(solve(t(X) %*% X) %*% t(X) %*% Y)
+}
+```
+
+```{r}
+lm(Sale_Price ~ Lot_Area + Year_Built, data=ames)
+df <- ames %>%
+  select(c(Sale_Price, Lot_Area, Year_Built))
+linear_fit(df)
+```
+
+```{r}
+try_many_models <- function(df, model_specs) {
+  results <- list()
+  
+  for (i in seq_along(model_specs)) {
+    predictors <- model_specs[[i]]
+    model_df <- df[, c(names(df)[1], predictors), drop = FALSE]
+    results[[i]] <- linear_fit(model_df)
+  }
+  
+  return(results)
+}
+```
+
+```{r}
+models <- list(c("Lot_Area"), 
+               c("Lot_Area", "Year_Built"), 
+               c("Lot_Area", "TotRms_AbvGrd"),
+               c("Lot_Area", "Year_Built", "TotRms_AbvGrd"))
+df <- ames %>% select("Sale_Price", "Lot_Area", "Year_Built", "TotRms_AbvGrd")
+try_many_models(df, models)
+```
+
+```{r}
+tune_model_split <- function(df_train, df_test, models, metric="adjusted_r2") {
+  estimators <- try_many_models(df_train, models)
+  n <- nrow(df_test)
+  
+  metric_vals <- sapply(1:length(estimators), function(i) {
+    beta_vec <- estimators[[i]]
+    predictors <- models[[i]]
+    
+    Y_test <- as.matrix(df_test[,1, drop=FALSE])
+    X_test <- cbind(rep(1, nrow(df_test)), 
+                    as.matrix(df_test[, predictors, drop=FALSE]))
+    colnames(X_test)[1] <- "intercept"
+    
+    Y_hat <- X_test %*% beta_vec
+    k <- length(beta_vec)
+    
+    resid <- Y_test - Y_hat
+    rss <- sum(resid^2)
+    
+    if (metric == "adjusted_r2") {
+      tss <- sum((Y_test - mean(Y_test))^2)
+      r2 <- 1 - rss / tss
+      adj_r2 <- 1 - (1 - r2) * (n - 1) / (n - k) # k = num predictors + 1
+      return(adj_r2)
+    } else if (metric == "AIC") {
+      aic <- n * log(rss / n) + 2 * k
+      return(aic)
+    } else if (metric == "BIC") {
+      bic <- n * log(rss / n) + k * log(n)
+      return(bic)
+    } else {
+      stop("Invalid metric.")
+    }
+  })
+  
+  model_strings <- sapply(models, function(preds) paste(preds, collapse=", "))
+  
+  result <- data.frame(model_predictors=model_strings)
+  result[[metric]] <- metric_vals
+  
+  return(result)
+}
+```
+
+```{r}
+df <- ames %>% select("Sale_Price", "Lot_Area", "Year_Built", "TotRms_AbvGrd")
+
+n <- nrow(df)
+n_train <- floor(n*0.8)
+train_indices <- sample(1:n, size=n_train, replace=FALSE)
+test_indices <- setdiff(1:n, train_indices)
+
+df_train <- df[train_indices, ]
+df_test <- df[train_indices, ]
+
+models <- list(c("Lot_Area"), 
+               c("Lot_Area", "Year_Built"), 
+               c("Lot_Area", "TotRms_AbvGrd"),
+               c("Lot_Area", "Year_Built", "TotRms_AbvGrd"))
+tune_model_split(df_train, df_test, models)
+```
+
+```{r}
+tune_model_cv <- function(df, models, nfolds, metric="adjusted_r2") {
+  n <- nrow(df)
+  fold_indices <- sample(rep(1:nfolds, length.out=n))
+  
+  results_mat <- matrix(0, nrow=length(models), ncol=nfolds)
+  
+  for (fold in 1:nfolds) {
+    test_mask <- (fold_indices == fold)
+    train_mask <- !test_mask
+    
+    df_train <- df[train_mask, ]
+    df_test <- df[test_mask, ]
+    
+    result <- tune_model_split(df_train, df_test, models, metric)
+    
+    results_mat[, fold] <- result[[metric]]
+  }
+  
+  metric_vals <- rowMeans(results_mat)
+  
+  model_strings <- sapply(models, function(preds) paste(preds, collapse=", "))
+  
+  result <- data.frame(model_predictors=model_strings)
+  result[[metric]] <- metric_vals
+  
+  return(result)
+}
+```
+
+```{r}
+df <- ames %>% select("Sale_Price", "Lot_Area", "Year_Built", "TotRms_AbvGrd")
+models <- list(c("Lot_Area"), 
+               c("Lot_Area", "Year_Built"), 
+               c("Lot_Area", "TotRms_AbvGrd"),
+               c("Lot_Area", "Year_Built", "TotRms_AbvGrd"))
+
+tune_model_cv(df, models, nfolds=5)
+```
+
+```{r}
+linear_fit(df)
+```
