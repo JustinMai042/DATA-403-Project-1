@@ -1,7 +1,8 @@
 ---
-title: "Client B Project Proposal"
-format: html
-editor: visual
+title: "Drinking Excess Alcohol is Dangerous (DEAD) Project Proposal"
+subtitle: "DATA 403: Project 1"
+authors: "Justin Mai, Libby Brill, Maxwell Dubow, Rachel Hartfelder"
+format: pdf
 ---
 
 ## Introduction
@@ -13,6 +14,10 @@ Thank you for choosing us to perform this analysis. Provided below is detailed i
 For the model, we will be using the alcohol sales transactions form the [Iowa Liquor Sales dataset](https://data.iowa.gov/Sales-Distribution/Iowa-Liquor-Sales/m3tr-qhgy/about_data). The data it contains spans from 2012 to 2025. However, we will be using the section of data beginning on September 1st, 2020 and ending on August 31st, 2025 as we believe this more recent, post-covid data is more relevant to your goals. We also excluded any unincorporated places as they represent only a minute chunk (\~0.5%) of the data and they often do not appear in other data sources we chose to bring in. For example, in addition to alcohol sales, we were interested in the population and demographics of places where Iowans purchased alcohol, so we bought in data from the US Census Bureau on [Incorporated Places in Iowa from 2020 to 2024](https://www.census.gov/data/tables/time-series/demo/popest/2020s-total-cities-and-towns.html).
 
 Using this data, we also created new variables for the analysis. We brought in data about the location of universities and colleges in Iowa to create a binary college town variable that is true if the city contains a college and false otherwise. In addition, we divided the total liters sold by the population of that city to create a liters per person variable since we were interested in exploring the amount of alcohol sold per capita.
+
+To understand the nature of the data, we performed an initial exploratory analysis and found that for most types of alcohol, college students are the primary consumer purchasing more liters per person than non college cities. We also found that whisky and vodka alcohols are more popular than other types.
+
+![Graph comparing the liters of alcohol sold per person between types of alcohol and college town presence](Graphs/client_b_graph_1.png)
 
 ## Model Selection
 

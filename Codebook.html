@@ -117,8 +117,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(readxl)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="load-data" class="level2">
-<h2 class="anchored" data-anchor-id="load-data">Load Data</h2>
+<section id="data-collection" class="level2">
+<h2 class="anchored" data-anchor-id="data-collection">Data Collection</h2>
+<ul>
+<li>Added 2 sources of outside data
+<ul>
+<li>https://www.census.gov/data/tables/time-series/demo/popest/2020s-total-cities-and-towns.html
+<ul>
+<li>Census population estimate, most accurate up-to-date data, stated as best practice to use this data for population totals by Census.gov.</li>
+</ul></li>
+<li>https://en.wikipedia.org/wiki/List_of_colleges_and_universities_in_Iowa
+<ul>
+<li>List of Universities in Iowa and their corresponding city</li>
+</ul></li>
+</ul></li>
+<li>We chose to focus on the last 5 years as we wanted higher velocity data, for our predictive and interpretive models.
+<ul>
+<li>We used the last year for initial overview and to set up the process, and will be expanding to the last 5 years once our model setup is complete</li>
+</ul></li>
+</ul>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>iowa_24_25 <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(here<span class="sc">::</span><span class="fu">here</span>(<span class="st">"Data"</span>, <span class="st">"Iowa_Liquor_Sales_2024_2025.csv"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
@@ -143,6 +160,36 @@ lgl  (1): County Number
 </section>
 <section id="data-cleaning-and-feature-engineering" class="level2">
 <h2 class="anchored" data-anchor-id="data-cleaning-and-feature-engineering">Data Cleaning and Feature Engineering</h2>
+<p>Data Cleaning</p>
+<ul>
+<li>Removing rows with negative “Bottles Sold”</li>
+<li>Removed Columns
+<ul>
+<li>We removed <code>Invoice/Item Number</code>, <code>Store Number</code>, <code>Store Name</code>, <code>Address</code> <code>Zip Code</code>, <code>Store Location</code>, <code>County Number</code>, <code>Category</code>, <code>Vendor Number</code>, <code>Vendor Name</code>, <code>Item Number</code>, <code>Item Description</code>, <code>Pack</code>, <code>Bottle Volume (ml)</code>, <code>State Bottle Cost</code>, <code>State Bottle Retail</code>, <code>Bottles Sold</code>, <code>Volume Sold (Gallons)</code>
+<ul>
+<li>Since we don’t care about store location, what stores, store name, and by association zip code, along with that specific invoice along with county number so those were removed. We also choose to remove categories since we already have category names. Additionally, we also choose to remove the Item number as we have no reference to that value. Item description was removed as Category names exist. Pack, state bottle cost, state bottle retail, bottle volume, volume sold, and bottles sold as we have total sales for that specific item of alcohol and we kept volume sold (liters) as our metric of measurement.</li>
+</ul></li>
+</ul></li>
+</ul>
+<p>Feature Engineering</p>
+<ul>
+<li>Added Columns
+<ul>
+<li>Added a column for colleges in Iowa corresponding to cities within Iowa.</li>
+<li><code>CollegeTF</code> column of boolean values, true if city has college, false if no.</li>
+<li>Added a <code>PopYear</code> column matching with the year given for the census data</li>
+<li>Condensed the types of Alcohol into 10 distinct categories with a column called categories, Whiskey, Vodka, Rum, Gin, Tequila/Mezcal, Brandy, Cordials &amp; Liqueur, Ready to Drink, Neutral Grain Spirit
+<ul>
+<li>Used ChatGPT to classify types of alcohol</li>
+</ul></li>
+</ul></li>
+<li>Modified/Renamed Columns
+<ul>
+<li>From the Date column added a column called Year.</li>
+<li>Transformed and renamed the Date column to Month.</li>
+<li>Renamed <code>Category Name</code> to <code>Category</code>, <code>Sale (Dollars)</code> to <code>Sales</code>, <code>Volume Sold (Liters)</code> to <code>LitersSold</code></li>
+</ul></li>
+</ul>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>iowa_24_25 <span class="ot">&lt;-</span> iowa_24_25 <span class="sc">|&gt;</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span><span class="fu">c</span>(<span class="st">`</span><span class="at">Invoice/Item Number</span><span class="st">`</span>, <span class="st">`</span><span class="at">Store Number</span><span class="st">`</span>, <span class="st">`</span><span class="at">Store Name</span><span class="st">`</span>, <span class="st">`</span><span class="at">Address</span><span class="st">`</span>,</span>
@@ -156,8 +203,8 @@ lgl  (1): County Number
 <span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>                             Date <span class="sc">&lt;</span> <span class="fu">mdy</span>(<span class="st">"9/1/2023"</span>) <span class="sc">~</span> <span class="dv">2022</span>,</span>
 <span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>                             Date <span class="sc">&lt;</span> <span class="fu">mdy</span>(<span class="st">"9/1/2024"</span>) <span class="sc">~</span> <span class="dv">2023</span>,</span>
 <span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>                             <span class="cn">TRUE</span> <span class="sc">~</span> <span class="dv">2024</span>),</span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>         <span class="co">#Year = year(mdy(Date)),</span></span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>         <span class="at">Date =</span> <span class="fu">month</span>(Date, <span class="at">label =</span> <span class="cn">TRUE</span>, <span class="at">abbr =</span> <span class="cn">FALSE</span>),</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>         <span class="at">Year =</span> <span class="fu">year</span>(Date),</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>         <span class="at">Date =</span> <span class="fu">month</span>(Date, <span class="at">label =</span> <span class="cn">TRUE</span>, <span class="at">abbr =</span> <span class="cn">TRUE</span>),</span>
 <span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>         <span class="fu">across</span>(City<span class="sc">:</span><span class="st">`</span><span class="at">Category Name</span><span class="st">`</span>, str_to_title)) <span class="sc">|&gt;</span></span>
 <span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">Month =</span> Date,</span>
 <span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>         <span class="at">Category =</span> <span class="st">`</span><span class="at">Category Name</span><span class="st">`</span>,</span>
@@ -204,11 +251,11 @@ lgl  (1): County Number
 <span id="cb8-58"><a href="#cb8-58" aria-hidden="true" tabindex="-1"></a>           City <span class="sc">==</span> <span class="st">"Oskaloosa"</span> <span class="sc">~</span> <span class="st">"William Penn University"</span>,</span>
 <span id="cb8-59"><a href="#cb8-59" aria-hidden="true" tabindex="-1"></a>           City <span class="sc">==</span> <span class="st">"Forest City"</span> <span class="sc">~</span> <span class="st">"Waldorf University"</span>,</span>
 <span id="cb8-60"><a href="#cb8-60" aria-hidden="true" tabindex="-1"></a>           <span class="cn">TRUE</span> <span class="sc">~</span> <span class="cn">NA_character_</span>),</span>
-<span id="cb8-61"><a href="#cb8-61" aria-hidden="true" tabindex="-1"></a>         <span class="at">TF_College =</span> <span class="sc">!</span><span class="fu">is.na</span>(College)) <span class="sc">|&gt;</span></span>
-<span id="cb8-62"><a href="#cb8-62" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(City, <span class="st">`</span><span class="at">2020</span><span class="st">`</span>, <span class="st">`</span><span class="at">2021</span><span class="st">`</span>, <span class="st">`</span><span class="at">2022</span><span class="st">`</span>, <span class="st">`</span><span class="at">2023</span><span class="st">`</span>, <span class="st">`</span><span class="at">2024</span><span class="st">`</span>, College, TF_College)</span>
+<span id="cb8-61"><a href="#cb8-61" aria-hidden="true" tabindex="-1"></a>         <span class="at">CollegeTF =</span> <span class="sc">!</span><span class="fu">is.na</span>(College)) <span class="sc">|&gt;</span></span>
+<span id="cb8-62"><a href="#cb8-62" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(City, <span class="st">`</span><span class="at">2020</span><span class="st">`</span>, <span class="st">`</span><span class="at">2021</span><span class="st">`</span>, <span class="st">`</span><span class="at">2022</span><span class="st">`</span>, <span class="st">`</span><span class="at">2023</span><span class="st">`</span>, <span class="st">`</span><span class="at">2024</span><span class="st">`</span>, College, CollegeTF)</span>
 <span id="cb8-63"><a href="#cb8-63" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-64"><a href="#cb8-64" aria-hidden="true" tabindex="-1"></a>df_iowa <span class="ot">&lt;-</span> df_iowa <span class="sc">|&gt;</span></span>
-<span id="cb8-65"><a href="#cb8-65" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="sc">-</span><span class="fu">c</span>(City, College, TF_College),</span>
+<span id="cb8-65"><a href="#cb8-65" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(<span class="at">cols =</span> <span class="sc">-</span><span class="fu">c</span>(City, College, CollegeTF),</span>
 <span id="cb8-66"><a href="#cb8-66" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_to =</span> <span class="st">"PopYear"</span>,</span>
 <span id="cb8-67"><a href="#cb8-67" aria-hidden="true" tabindex="-1"></a>    <span class="at">values_to =</span> <span class="st">"Population"</span></span>
 <span id="cb8-68"><a href="#cb8-68" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
@@ -228,25 +275,132 @@ lgl  (1): County Number
 <span id="cb8-82"><a href="#cb8-82" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_detect</span>(Category, <span class="fu">regex</span>(<span class="st">"Neutral Grain Spirits"</span>, <span class="at">ignore_case =</span> <span class="cn">TRUE</span>)) <span class="sc">~</span> <span class="st">"Neutral Grain Spirit"</span>,</span>
 <span id="cb8-83"><a href="#cb8-83" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span> <span class="sc">~</span> <span class="st">"Other"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<p>Data Transformation</p>
+<ul>
+<li>Pivoted data from wide to long
+<ul>
+<li>Pivoted around 3 main columns: <code>City</code>, <code>College</code>, and <code>CollegeTF</code>.</li>
+</ul></li>
+<li>Left with one large dataset called <code>df_iowa</code> with columns:
+<ul>
+<li><code>City</code>: City in Iowa</li>
+<li><code>College</code>: College(s) belonging to city in Iowa</li>
+<li><code>CollegeTF</code>: True if College in city, False otherwise.</li>
+<li><code>PopYear</code>: Year of population estimate by U.S. Census</li>
+<li><code>Population</code>: Population estimate for city of given year by U.S. Census</li>
+<li><code>Month</code>: Month of year from original date column of Iowa Liquor Sales</li>
+<li><code>County</code>: County of city.</li>
+<li><code>Category</code>: One of 10 types of classification for Alcohol</li>
+<li><code>Sales</code>: Total cost of liquor order (number of bottles multiplied by the state bottle retail)</li>
+<li><code>LitersSold</code>: Total volume of liquor ordered in liters. (i.e.&nbsp;(Bottle Volume (ml) x Bottles Sold)/1,000)</li>
+<li><code>Year</code>: Year from original date column of Iowa Liquor Sales</li>
+</ul></li>
+</ul>
+<p>Client A: <code>df_A</code>, Client B: <code>df_B</code></p>
+<ul>
+<li><code>df_A</code>
+<ul>
+<li>Grouped by <code>City</code>, <code>CollegeTF</code>, <code>Population</code>, <code>Category</code>, <code>Year</code>, <code>Month</code></li>
+<li>Produced <code>AvgSales</code> by summing the city sales and dividing by the city population, for average sales per person (i.e.&nbsp;.43: .43 bottles sold per person in that city for that month within that year)</li>
+</ul></li>
+<li><code>df_B</code>
+<ul>
+<li>Grouped by <code>City</code>, <code>CollegeTF</code>, <code>Population</code>, <code>Category</code></li>
+<li>Produced <code>AvgLiters</code> by summing the city liters sold and dividing by the city population for average liters sold per person. (i.e.&nbsp;1.6: 1.6 liters sold per person in that city for that month within that year)</li>
+</ul></li>
+</ul>
 <section id="client-a-booze-r-us" class="level4">
 <h4 class="anchored" data-anchor-id="client-a-booze-r-us">Client A: Booze ‘R’ Us</h4>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>df_A <span class="ot">&lt;-</span> df_iowa <span class="sc">|&gt;</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(City, TF_College, Population, Category) <span class="sc">|&gt;</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">TotalSales =</span> <span class="fu">sum</span>(Sales)) <span class="sc">|&gt;</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">AvgSales =</span> TotalSales<span class="sc">/</span>Population)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>`summarise()` has grouped output by 'City', 'TF_College', 'Population'. You can
-override using the `.groups` argument.</code></pre>
-</div>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(City, CollegeTF, Population, Category, Year, Month) <span class="sc">|&gt;</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">TotalSales =</span> <span class="fu">sum</span>(Sales), <span class="at">.groups =</span> <span class="st">"drop"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">AvgSales =</span> TotalSales<span class="sc">/</span>Population) <span class="sc">|&gt;</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>TotalSales)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="client-b-drinking-excess-alcohol-is-dangerous-dead" class="level4">
 <h4 class="anchored" data-anchor-id="client-b-drinking-excess-alcohol-is-dangerous-dead">Client B: Drinking Excess Alcohol is Dangerous (DEAD)</h4>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>df_B <span class="ot">&lt;-</span> df_iowa <span class="sc">|&gt;</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>() <span class="sc">|&gt;</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>df_B <span class="ot">&lt;-</span> df_iowa <span class="sc">|&gt;</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(City, CollegeTF, Population, Category) <span class="sc">|&gt;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">TotalLiters =</span> <span class="fu">sum</span>(LitersSold), <span class="at">.groups =</span> <span class="st">"drop"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">AvgLiters =</span> TotalLiters<span class="sc">/</span>Population) <span class="sc">|&gt;</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>TotalLiters)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="data-visualizations" class="level2">
+<h2 class="anchored" data-anchor-id="data-visualizations">Data Visualizations</h2>
+<section id="client-a-booze-r-us-1" class="level4">
+<h4 class="anchored" data-anchor-id="client-a-booze-r-us-1">Client A: Booze ‘R’ Us</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>df_A <span class="sc">|&gt;</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Month =</span> <span class="fu">factor</span>(<span class="fu">if_else</span>(Month <span class="sc">==</span> <span class="st">"Sep"</span>, <span class="st">"Sep, 2024"</span>,</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>                                <span class="fu">if_else</span>(Month <span class="sc">==</span> <span class="st">"Jan"</span>, <span class="st">"Jan, 2025"</span>, Month)),</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>                        <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"Sep, 2024"</span>, <span class="st">"Oct"</span>, <span class="st">"Nov"</span>, <span class="st">"Dec"</span>, <span class="st">"Jan, 2025"</span>,</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>                                   <span class="st">"Feb"</span>, <span class="st">"Mar"</span>, <span class="st">"Apr"</span>, <span class="st">"May"</span>, <span class="st">"Jun"</span>, <span class="st">"Jul"</span>,</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>                                   <span class="st">"Aug"</span>)),</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>         <span class="at">CollegeTF =</span> <span class="fu">if_else</span>(CollegeTF, <span class="st">"College Town"</span>,</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>                                    <span class="st">"Non-College Town"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(CollegeTF, Month) <span class="sc">|&gt;</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">AvgSales =</span> <span class="fu">mean</span>(AvgSales), <span class="at">.groups =</span> <span class="st">"drop"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> Month, <span class="at">y =</span> AvgSales, <span class="at">color =</span> CollegeTF, <span class="at">group =</span> CollegeTF)) <span class="sc">+</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_color_manual</span>(<span class="at">values =</span> <span class="fu">c</span>(<span class="st">"steelblue"</span>, <span class="st">"orange3"</span>)) <span class="sc">+</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="st">"Month"</span>, <span class="at">y =</span> <span class="st">"Average Sales per Capita ($)"</span>,</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>       <span class="at">color =</span> <span class="st">""</span>, <span class="at">title =</span> <span class="st">"Iowa Alcohol Sales Per Capita"</span>) <span class="sc">+</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">45</span>, <span class="at">hjust =</span> <span class="dv">1</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Codebook_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="client-b-drinking-excess-alcohol-is-dangerous-dead-1" class="level4">
+<h4 class="anchored" data-anchor-id="client-b-drinking-excess-alcohol-is-dangerous-dead-1">Client B: Drinking Excess Alcohol is Dangerous (DEAD)</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># dataset_b &lt;- df_iowa |&gt;</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co">#   group_by(City, CollegeTF, Population, Category) |&gt;</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co">#   summarise(LitersSold = sum(LitersSold), .groups = "drop") |&gt;</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co">#   mutate(AvgLiters = LitersSold / Population) |&gt;</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="co">#   mutate(CollegeTF = if_else(CollegeTF, "College Town", "Non-College Town"))</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>weighted_by_cat <span class="ot">&lt;-</span> df_B <span class="sc">|&gt;</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="co">#mutate(CollegeTF = if_else(CollegeTF, "College Town", "Non-College Town")) |&gt;</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(Category, CollegeTF) <span class="sc">|&gt;</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">weighted_mean =</span> <span class="fu">weighted.mean</span>(AvgLiters, <span class="at">w =</span> Population, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">CollegeTF =</span> <span class="fu">factor</span>(<span class="fu">if_else</span>(CollegeTF, <span class="st">"College Town"</span>, <span class="st">"Non-College Town"</span>),</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>                       <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"Non-College Town"</span>, <span class="st">"College Town"</span>))</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(weighted_by_cat, <span class="fu">aes</span>(<span class="at">x =</span> Category, <span class="at">y =</span> weighted_mean, <span class="at">fill =</span> CollegeTF)) <span class="sc">+</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_col</span>(<span class="at">position =</span> <span class="fu">position_dodge</span>(<span class="at">width =</span> <span class="fl">0.7</span>), <span class="at">width =</span> <span class="fl">0.65</span>) <span class="sc">+</span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_manual</span>(</span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>    <span class="at">values =</span> <span class="fu">c</span>(<span class="st">"College Town"</span> <span class="ot">=</span> <span class="st">"steelblue"</span>, <span class="st">"Non-College Town"</span> <span class="ot">=</span> <span class="st">"orange3"</span>),</span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>    <span class="at">breaks =</span> <span class="fu">c</span>(<span class="st">"College Town"</span>, <span class="st">"Non-College Town"</span>),</span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"College Town"</span>, <span class="st">"Non-College Town"</span>)</span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">+</span></span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">x =</span> <span class="cn">NULL</span>, <span class="at">y =</span> <span class="st">"Population-Weighted Average Liters per Person"</span>,</span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a>       <span class="at">fill =</span> <span class="cn">NULL</span>) <span class="sc">+</span></span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>(<span class="at">base_size =</span> <span class="dv">11</span>) <span class="sc">+</span></span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">panel.grid.minor =</span> <span class="fu">element_blank</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Codebook_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
 </div>
 </section>
 </section>
