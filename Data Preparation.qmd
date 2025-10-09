@@ -75,12 +75,18 @@ library(readxl)
 #| message: false
 
 iowa_24_25 <- read_csv(here::here("Data", "Iowa_Liquor_Sales_2024_2025.csv"))
+iowa_23_24 <- read_csv(here::here("Data", "Iowa_Liquor_Sales_2023_2024.csv"))
+iowa_22_23 <- read_csv(here::here("Data", "Iowa_Liquor_Sales_2022_2023.csv"))
+iowa_21_22 <- read_csv(here::here("Data", "Iowa_Liquor_Sales_2021_2022.csv"))
+iowa_20_21 <- read_csv(here::here("Data", "Iowa_Liquor_Sales_2020_2021.csv"))
 iowa_pop <- read_excel(here::here("Data", "Iowa_City_Populations.xlsx"),
                        skip = 3)
 ```
 
 ```{r}
-iowa_24_25 <- iowa_24_25 |>
+iowa_20_25 <- rbind(iowa_20_21, rbind(iowa_21_22, rbind(iowa_22_23, rbind(iowa_23_24, iowa_24_25))))
+
+iowa_20_25 <- iowa_20_25 |>
   select(-c(`Invoice/Item Number`, `Store Number`, `Store Name`, `Address`,
             `Zip Code`, `Store Location`, `County Number`, Category,
             `Vendor Number`, `Vendor Name`, `Item Number`, `Item Description`,
@@ -156,7 +162,7 @@ df_iowa <- df_iowa |>
     values_to = "Population"
   ) |>
   mutate(PopYear = as.numeric(PopYear)) |>
-  inner_join(iowa_24_25, by = c("City", "PopYear")) |>
+  inner_join(iowa_20_25, by = c("City", "PopYear")) |>
   filter(Sales > 0,
          LitersSold > 0) |>
   mutate(Category = case_when(
@@ -197,11 +203,11 @@ df_B <- df_iowa |>
 
 ```{r}
 df_A |>
-  mutate(Month = factor(if_else(Month == "Sep", "Sep, 2024",
-                                if_else(Month == "Jan", "Jan, 2025", Month)),
-                        levels = c("Sep, 2024", "Oct", "Nov", "Dec",
-                                   "Jan, 2025", "Feb", "Mar", "Apr", "May",
-                                   "Jun", "Jul", "Aug")),
+  mutate(#Month = factor(if_else(Month == "Sep", "Sep, 2024",
+                                #if_else(Month == "Jan", "Jan, 2025", Month)),
+                        #levels = c("Sep, 2024", "Oct", "Nov", "Dec",
+                                   #"Jan, 2025", "Feb", "Mar", "Apr", "May",
+                                   #"Jun", "Jul", "Aug")),
          CollegeTF = if_else(CollegeTF, "College Town",
                                     "Non-College Town")) |>
   group_by(CollegeTF, Month) |>
