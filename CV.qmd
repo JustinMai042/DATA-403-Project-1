@@ -70,7 +70,7 @@ try_many_models(df, models)
 
 
 ```{r}
-tune_model_split <- function(df_train, df_test, models, metric="adjusted_r2") {
+tune_model_split <- function(df_train, df_test, models, metric="r2") {
   estimators <- try_many_models(df_train, models)
   n <- nrow(df_test)
 
@@ -91,6 +91,9 @@ tune_model_split <- function(df_train, df_test, models, metric="adjusted_r2") {
       tss <- sum((Y_test - mean(Y_test))^2)
       r2 <- 1 - rss / tss
       1 - (1 - r2) * (n - 1) / (n - k)
+    } else if (metric == "r2") {
+      tss <- sum((Y_test - mean(Y_test))^2)
+      1 - rss / tss
     } else if (metric == "AIC") {
       n * log(rss / n) + 2 * k
     } else if (metric == "BIC") {
@@ -134,7 +137,7 @@ tune_model_split(df_train, df_test, models)
 ```
 
 ```{r}
-tune_model_cv <- function(df, models, nfolds, metric="adjusted_r2") {
+tune_model_cv <- function(df, models, nfolds, metric="r2") {
   n <- nrow(df)
   fold_indices <- sample(rep(1:nfolds, length.out=n))
   
@@ -199,7 +202,48 @@ models <- list(
 
 
 order <- tune_model_cv(df, models, nfolds=5)|>
+  arrange(desc(r2))
+order
+```
+
+
+
+```{r}
+
+df <- df_A %>% 
+  dplyr::mutate(LogSales = log(AvgSales)) |>
+  dplyr::select("LogSales", "CollegeTF", "Month", "Category", "Population", "City", "Year")
+models <- list(
+  c("CollegeTF"),
+  c("CollegeTF", "Month"),
+  c("CollegeTF", "Category"),
+  c("CollegeTF", "Month", "Category"),
+  c("CollegeTF", "Population"),
+  c("CollegeTF", "Month", "Population"),
+  c("CollegeTF", "Category", "Population"),
+  c("CollegeTF", "Month", "Category", "Population"),
+  c("CollegeTF", "Category", "Population", "Year"),
+  c("CollegeTF", "Month", "Category", "Population", "Year")
+)
+
+order <- tune_model_cv(df, models, nfolds=5, metric="adjusted_r2")|>
   arrange(desc(adjusted_r2))
+order
+```
+
+```{r}
+df <- df_B %>% 
+  mutate(LogLiters = log(AvgLiters)) |>
+  dplyr::select("LogLiters", "CollegeTF", "Category", "Population", "City")
+models <- list(
+  c("CollegeTF"),
+  c("CollegeTF", "Category"),
+  c("CollegeTF", "Population"),
+  c("CollegeTF", "Category", "Population")
+)
+
+order <- tune_model_cv(df, models, nfolds=5, metric="r2")|>
+  arrange(desc(r2))
 order
 ```
 
@@ -207,8 +251,11 @@ order
 
 
 
+```{r}
+predictions <- lm(log(AvgSales) ~ CollegeTF + Category + Population + Month, data = df)
 
-
+plot(predictions)
+```
 
 
 
