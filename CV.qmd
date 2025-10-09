@@ -226,8 +226,8 @@ models <- list(
   c("CollegeTF", "Month", "Category", "Population", "Year")
 )
 
-order <- tune_model_cv(df, models, nfolds=5, metric="adjusted_r2")|>
-  arrange(desc(adjusted_r2))
+order <- tune_model_cv(df, models, nfolds=5, metric="r2")|>
+  arrange(desc(r2))
 order
 ```
 
