@@ -12,7 +12,7 @@ Your comapny, Booze R' Us, is a well known liquor store chain in Iowa with goals
 
 For this analysis we will use a compilation of data from three sources. From Iowa Open Data, we will use Iowa liquor sales data which details the alcohol sales transactions between the state and vendors. This dataset contains tranactions from 2012 to 2025. From the U.S. Census Bureau, we will use city population data. To measure the amount of alcohol sold in a city
 
-## Data Cleaning
+## Data Cleaning and Preprocessing
 
 Before creating a model, we cleaned the data to pre
 
@@ -23,6 +23,12 @@ In addition to cleaning the data, we created three new variables. To capture the
 A Look at the Data
 
 Model Selection
+
+To predict the future sales for Booze R' Us, we chose to create a linear regression model. This model approach is easy to interpret, has a clear performance evaluation, and provides fast computation. For these reasons, we believe this model will provide Booze R' Us with meaningful predictions and solid recommendations while minimizing their cost.
+
+Another important aspect of the model is determining what the model will predict. We considered many different response variables such as total alcohol sales in a city and total bottles sold. However, we decided to predict the average dollar amount an individual spends on alcohol in a city. We knew that as population increases total alcohol sales will also increase. Thus, larger cities will have more alcohol sales just because there are more individuals buying alcohol. We thought it would be more interesting if we look at sales on an individual level. We want to determine if there is a difference in alcohol spending between individuals living in a larger city than individuals living in a smaller city.
+
+After choosing our model and response variable, we tested models with various sets of predictors.
 
 Cross Validation
 
