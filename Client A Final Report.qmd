@@ -1,0 +1,33 @@
+---
+title: "Client A Final Report"
+format: html
+editor: visual
+---
+
+## Introduction
+
+Your comapny, Booze R' Us, is a well known liquor store chain in Iowa with goals of expanding to other states and predicting future sales. To meet the needs of Booze R' US, our goal throughout this analysis is to create a model that predicts the average dollar amount an individual spends on alcohol in a city.
+
+## Data
+
+For this analysis we will use a compilation of data from three sources. From Iowa Open Data, we will use Iowa liquor sales data which details the alcohol sales transactions between the state and vendors. This dataset contains tranactions from 2012 to 2025. From the U.S. Census Bureau, we will use city population data. To measure the amount of alcohol sold in a city
+
+## Data Cleaning
+
+Before creating a model, we cleaned the data to pre
+
+## Feature Engineering
+
+In addition to cleaning the data, we created three new variables. To capture the average dollar amount one individual spends on alcohol in a city, we divided the total sales of alcohol in that city by the city's population. We also organized alcohols into general categories such as whiskey, rum, gin, vodka, etc. Finally, we used college data to determine whether or not a city is a college town.
+
+A Look at the Data
+
+Model Selection
+
+Cross Validation
+
+Model Performance
+
+Conclusions
+
+Recommendations
